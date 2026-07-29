@@ -65,7 +65,40 @@ def dinner_detail(dinner_id):
     dinner = _dinner_view(at.get_dinner(dinner_id))
     attendees = [_attendee_view(r) for r in at.list_attendees_for_dinner(dinner_id)]
     attendees.sort(key=lambda a: a["name"])
-    return render_template("dinner.html", dinner=dinner, attendees=attendees)
+    return render_template(
+        "dinner.html",
+        dinner=dinner,
+        attendees=attendees,
+        sector_choices=at.SECTOR_CHOICES,
+    )
+
+
+@app.route("/dinner/<dinner_id>/attendee/<attendee_id>/field", methods=["POST"])
+def update_attendee_field(dinner_id, attendee_id):
+    data = request.get_json(force=True, silent=True) or {}
+    field = data.get("field")
+    value = data.get("value", "")
+    try:
+        at.update_attendee_field(attendee_id, field, value)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": "Airtable update failed"}), 502
+    return jsonify({"ok": True})
+
+
+@app.route("/dinner/<dinner_id>/field", methods=["POST"])
+def update_dinner_field(dinner_id):
+    data = request.get_json(force=True, silent=True) or {}
+    field = data.get("field")
+    value = data.get("value", "")
+    try:
+        at.update_dinner_field(dinner_id, field, value)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception:
+        return jsonify({"error": "Airtable update failed"}), 502
+    return jsonify({"ok": True})
 
 
 @app.route("/dinner/<dinner_id>/attendee/<attendee_id>/photo", methods=["POST"])

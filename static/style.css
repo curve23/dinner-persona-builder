@@ -125,7 +125,7 @@ body {
 
 .attendee-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 18px;
 }
 
@@ -139,9 +139,117 @@ body {
 .attendee-card .top-row {
   display: flex;
   gap: 14px;
-  align-items: center;
-  margin-bottom: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
 }
+
+.identity-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ---- Inline-editable fields ---- */
+.field-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  color: #9396b8;
+  margin: 10px 0 4px 0;
+}
+
+.editable-field {
+  width: 100%;
+  font-family: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 6px;
+  margin: 0;
+  resize: none;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.editable-field:hover {
+  background: #F5F6FB;
+}
+
+.editable-field:focus {
+  outline: none;
+  background: white;
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 2px rgba(63, 50, 176, 0.12);
+}
+
+.name-input {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--navy);
+  padding-left: 6px;
+}
+
+.role-input {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3a3d5c;
+}
+
+.org-input {
+  font-size: 12.5px;
+  color: #6b6e94;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field-col select.editable-field {
+  cursor: pointer;
+}
+
+.bio-input, .reason-input {
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.theme-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #3a3d5c;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 6px;
+  resize: none;
+  background: transparent;
+}
+
+.theme-input:hover { background: #F5F6FB; }
+.theme-input:focus {
+  outline: none;
+  background: white;
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 2px rgba(63, 50, 176, 0.12);
+}
+
+.save-status {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  min-height: 14px;
+}
+
+.save-status.ok { color: #1a8f4c; }
+.save-status.err { color: var(--coral); }
 
 .dropzone {
   width: 64px;

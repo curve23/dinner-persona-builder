@@ -78,6 +78,34 @@ def list_attendees_for_dinner(dinner_record_id):
     return [r for r in records if linked(rec=r)]
 
 
+ATTENDEE_EDITABLE_FIELDS = {
+    "Name", "Role", "Organization", "Location", "Sector", "Bio",
+    "Reason for Inviting",
+}
+DINNER_EDITABLE_FIELDS = {"Dinner Name", "Theme", "Venue"}
+
+SECTOR_CHOICES = [
+    "Government", "Private Sector", "Nonprofit & Advocacy",
+    "Faith & Community", "Media", "Other",
+]
+
+
+def update_attendee_field(attendee_record_id, field_name, value):
+    if field_name not in ATTENDEE_EDITABLE_FIELDS:
+        raise ValueError(f"Field '{field_name}' is not editable")
+    if field_name == "Sector" and value not in SECTOR_CHOICES:
+        raise ValueError(f"'{value}' is not a valid Sector option")
+    url = f"{API_ROOT}/{BASE_ID}/{ATTENDEES_TABLE}/{attendee_record_id}"
+    return _patch(url, {"fields": {field_name: value}})
+
+
+def update_dinner_field(dinner_record_id, field_name, value):
+    if field_name not in DINNER_EDITABLE_FIELDS:
+        raise ValueError(f"Field '{field_name}' is not editable")
+    url = f"{API_ROOT}/{BASE_ID}/{DINNERS_TABLE}/{dinner_record_id}"
+    return _patch(url, {"fields": {field_name: value}})
+
+
 def clear_photo(attendee_record_id):
     """Clear the Photo attachment field before uploading a replacement, so a
     drag-and-drop always results in exactly one photo per attendee."""

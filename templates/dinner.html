@@ -17,14 +17,16 @@
       <a class="btn" href="/dinner/{{ dinner.id }}/pdf" target="_blank">Generate Persona PDF</a>
     </div>
 
-    {% if dinner.theme %}
-      <div class="theme-box"><strong>Theme:</strong> {{ dinner.theme }}</div>
-    {% endif %}
+    <div class="theme-box">
+      <label class="field-label">Theme</label>
+      <textarea class="editable-field theme-input" rows="2"
+        data-scope="dinner" data-dinner-id="{{ dinner.id }}" data-field="Theme">{{ dinner.theme }}</textarea>
+      <span class="save-status" data-field-key="dinner:Theme"></span>
+    </div>
 
     <p class="hint">
-      Drag a headshot onto a guest's circle (or click it) to upload &mdash; it saves straight to
-      the Photo field in Airtable. Bio, Reason for Inviting, Role, and Sector are edited in
-      Airtable directly; refresh this page or regenerate the PDF to see changes.
+      Everything below is live in Airtable. Click any field to edit &mdash; it saves automatically
+      when you click away. Drag a headshot onto a guest's circle (or click it) to upload a photo.
     </p>
 
     {% if attendees %}
@@ -40,14 +42,42 @@
                 {% endif %}
                 <input type="file" accept="image/*" hidden>
               </div>
-              <div>
-                <div class="name">{{ a.name }}</div>
-                <div class="role">{{ a.role }}{% if a.org %} &middot; {{ a.org }}{% endif %}</div>
-                {% if a.sector %}<span class="sector-tag">{{ a.sector }}</span>{% endif %}
+              <div class="identity-fields">
+                <input class="editable-field name-input" type="text" value="{{ a.name }}"
+                  data-scope="attendee" data-dinner-id="{{ dinner.id }}" data-attendee-id="{{ a.id }}" data-field="Name" placeholder="Name">
+                <input class="editable-field role-input" type="text" value="{{ a.role }}"
+                  data-scope="attendee" data-dinner-id="{{ dinner.id }}" data-attendee-id="{{ a.id }}" data-field="Role" placeholder="Role">
+                <input class="editable-field org-input" type="text" value="{{ a.org }}"
+                  data-scope="attendee" data-dinner-id="{{ dinner.id }}" data-attendee-id="{{ a.id }}" data-field="Organization" placeholder="Organization">
               </div>
             </div>
-            {% if a.bio %}<div class="bio">{{ a.bio }}</div>{% endif %}
+
+            <div class="field-row">
+              <div class="field-col">
+                <label class="field-label">Location</label>
+                <input class="editable-field" type="text" value="{{ a.location }}"
+                  data-scope="attendee" data-dinner-id="{{ dinner.id }}" data-attendee-id="{{ a.id }}" data-field="Location">
+              </div>
+              <div class="field-col">
+                <label class="field-label">Sector</label>
+                <select class="editable-field" data-scope="attendee" data-dinner-id="{{ dinner.id }}" data-attendee-id="{{ a.id }}" data-field="Sector">
+                  {% for s in sector_choices %}
+                    <option value="{{ s }}" {% if a.sector == s %}selected{% endif %}>{{ s }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <label class="field-label">Bio</label>
+            <textarea class="editable-field bio-input" rows="4"
+              data-scope="attendee" data-dinner-id="{{ dinner.id }}" data-attendee-id="{{ a.id }}" data-field="Bio">{{ a.bio }}</textarea>
+
+            <label class="field-label">Why They're At The Table</label>
+            <textarea class="editable-field reason-input" rows="3"
+              data-scope="attendee" data-dinner-id="{{ dinner.id }}" data-attendee-id="{{ a.id }}" data-field="Reason for Inviting">{{ a.reason }}</textarea>
+
             <div class="upload-status" data-attendee-id="{{ a.id }}"></div>
+            <span class="save-status" data-field-key="attendee:{{ a.id }}"></span>
           </div>
         {% endfor %}
       </div>

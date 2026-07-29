@@ -66,28 +66,28 @@ CSS = f"""
   .dot {{ width: 10pt; height: 10pt; border-radius: 50%; display: inline-block; margin-right: 6pt; border: 1.2pt solid rgba(255,255,255,0.85); }}
 
   .sidebar {{
-    position: absolute; left: 0; width: 1.9in; height: {ROW_H}in;
-    padding: 0.34in 0.3in; color: {OFFWHITE};
+    position: absolute; left: 0; width: 2.15in; height: {ROW_H}in;
+    padding: 0.3in 0.28in; color: {OFFWHITE};
   }}
   .avatar {{
-    width: 1.05in; height: 1.05in; border-radius: 50%; border: 2pt solid {OFFWHITE};
+    width: 1.55in; height: 1.55in; border-radius: 50%; border: 2.5pt solid {OFFWHITE};
     background: rgba(255,255,255,0.14); display: table-cell; text-align: center;
-    vertical-align: middle; font-family: 'Caladea', Georgia, serif; font-size: 21pt;
-    font-weight: 700; margin-bottom: 0.3in; overflow: hidden;
+    vertical-align: middle; font-family: 'Caladea', Georgia, serif; font-size: 32pt;
+    font-weight: 700; margin-bottom: 0.24in; overflow: hidden;
   }}
-  .avatar img {{ width: 1.05in; height: 1.05in; object-fit: cover; border-radius: 50%; display: block; }}
+  .avatar img {{ width: 1.55in; height: 1.55in; object-fit: cover; border-radius: 50%; display: block; }}
   .sector-tag {{
     display: inline-block; font-size: 9pt; text-transform: uppercase; letter-spacing: 1pt;
     font-weight: 700; background: rgba(255,255,255,0.18); padding: 6pt 9pt; border-radius: 3pt;
-    margin-bottom: 14pt; line-height: 1.35;
+    margin-bottom: 12pt; line-height: 1.35;
   }}
-  .location {{ font-size: 10.8pt; font-weight: 400; opacity: 0.92; }}
+  .location {{ font-size: 10.5pt; font-weight: 400; opacity: 0.92; }}
   .location-label {{
     font-size: 7.5pt; text-transform: uppercase; letter-spacing: 1pt; opacity: 0.65;
     margin-bottom: 3pt; font-weight: 700;
   }}
 
-  .content {{ position: absolute; left: 1.9in; width: 8.6in; height: {ROW_H}in; padding: 0.42in 0.5in 0.3in 0.35in; }}
+  .content {{ position: absolute; left: 2.15in; width: 8.35in; height: {ROW_H}in; padding: 0.4in 0.5in 0.3in 0.35in; }}
   .kicker {{ font-size: 8.5pt; text-transform: uppercase; letter-spacing: 1.6pt; font-weight: 700; margin-bottom: 6pt; }}
   .content h1 {{ font-family: 'Caladea', Georgia, serif; font-size: 25pt; margin: 0 0 6pt 0; color: {NAVY}; line-height: 1.08; }}
   .role-line {{ font-size: 11.3pt; margin-bottom: 12pt; color: #3A3D5C; line-height: 1.4; }}
