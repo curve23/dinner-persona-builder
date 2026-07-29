@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ dinner.name }} &middot; Persona Builder</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">In The Room Media</div>
+    <h1>{{ dinner.name }}</h1>
+  </div>
+  <div class="wrap">
+    <div class="actions">
+      <a class="btn secondary" href="/">&larr; All dinners</a>
+      <a class="btn" href="/dinner/{{ dinner.id }}/pdf" target="_blank">Generate Persona PDF</a>
+    </div>
+
+    {% if dinner.theme %}
+      <div class="theme-box"><strong>Theme:</strong> {{ dinner.theme }}</div>
+    {% endif %}
+
+    <p class="hint">
+      Drag a headshot onto a guest's circle (or click it) to upload &mdash; it saves straight to
+      the Photo field in Airtable. Bio, Reason for Inviting, Role, and Sector are edited in
+      Airtable directly; refresh this page or regenerate the PDF to see changes.
+    </p>
+
+    {% if attendees %}
+      <div class="attendee-grid">
+        {% for a in attendees %}
+          <div class="attendee-card">
+            <div class="top-row">
+              <div class="dropzone" data-attendee-id="{{ a.id }}" data-dinner-id="{{ dinner.id }}">
+                {% if a.photo_thumb %}
+                  <img src="{{ a.photo_thumb }}" />
+                {% else %}
+                  Drop photo
+                {% endif %}
+                <input type="file" accept="image/*" hidden>
+              </div>
+              <div>
+                <div class="name">{{ a.name }}</div>
+                <div class="role">{{ a.role }}{% if a.org %} &middot; {{ a.org }}{% endif %}</div>
+                {% if a.sector %}<span class="sector-tag">{{ a.sector }}</span>{% endif %}
+              </div>
+            </div>
+            {% if a.bio %}<div class="bio">{{ a.bio }}</div>{% endif %}
+            <div class="upload-status" data-attendee-id="{{ a.id }}"></div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        No attendees linked to this dinner yet. Add rows to <strong>Dinner Attendees</strong> in
+        Airtable and link them to this dinner.
+      </div>
+    {% endif %}
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
