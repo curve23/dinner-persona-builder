@@ -257,6 +257,15 @@ document.addEventListener("DOMContentLoaded", () => {
         .map((k) => `<option value="${escapeAttr(k.name)}" ${k.name === section.sender ? "selected" : ""}>${escapeHtml(k.name)}</option>`)
         .join("");
 
+      const followupsHtml = (section.recommendedFollowUps || [])
+        .map((fu) => `
+          <div class="followup-item">
+            <input type="text" class="editable-field followup-action-input" value="${escapeAttr(fu.action)}">
+            <textarea class="editable-field followup-rationale-input" rows="2">${escapeHtml(fu.rationale)}</textarea>
+          </div>
+        `)
+        .join("");
+
       const card = document.createElement("div");
       card.className = "result-card";
       card.dataset.attendeeId = section.attendeeId;
@@ -281,11 +290,10 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="result-label">KPMG Angle</div>
             <textarea class="result-textarea kpmg-angle" rows="4">${escapeHtml(section.kpmgAngle)}</textarea>
           </div>
-          <div class="result-section email-box">
-            <div class="result-label">Draft Follow-Up</div>
+          <div class="result-section followups-box">
+            <div class="result-label">Recommended Follow-Ups</div>
             <select class="email-sender-select">${senderOptions}</select>
-            <input type="text" class="email-subject-input" value="${escapeAttr(section.emailSubject)}">
-            <textarea class="email-body-textarea" rows="8">${escapeHtml(section.emailBody)}</textarea>
+            <div class="followup-items">${followupsHtml}</div>
           </div>
         </div>
       `;
@@ -315,8 +323,10 @@ document.addEventListener("DOMContentLoaded", () => {
       whyNow: card.querySelector(".why-now").value,
       kpmgAngle: card.querySelector(".kpmg-angle").value,
       sender: card.querySelector(".email-sender-select").value,
-      emailSubject: card.querySelector(".email-subject-input").value,
-      emailBody: card.querySelector(".email-body-textarea").value,
+      recommendedFollowUps: Array.from(card.querySelectorAll(".followup-item")).map((item) => ({
+        action: item.querySelector(".followup-action-input").value,
+        rationale: item.querySelector(".followup-rationale-input").value,
+      })),
     }));
   }
 

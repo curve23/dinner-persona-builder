@@ -115,9 +115,11 @@ CSS = f"""
     margin-bottom: 5pt;
   }}
   .brief-text {{ font-size: 11pt; line-height: 1.55; color: {INK}; }}
-  .email-box {{ padding: 16pt 18pt; border-radius: 2pt; margin-top: 6pt; }}
-  .email-subject {{ font-size: 11.5pt; font-weight: 700; color: {NAVY}; margin-bottom: 8pt; }}
-  .email-body {{ font-size: 10.5pt; line-height: 1.6; color: {INK}; white-space: pre-wrap; }}
+  .followups-box {{ padding: 16pt 18pt; border-radius: 2pt; margin-top: 6pt; }}
+  .followup-item {{ margin-bottom: 10pt; }}
+  .followup-item:last-child {{ margin-bottom: 0; }}
+  .followup-action {{ font-size: 10.8pt; font-weight: 700; color: {NAVY}; line-height: 1.4; }}
+  .followup-rationale {{ font-size: 10pt; line-height: 1.5; color: {INK}; margin-top: 2pt; }}
 
   .recap-page {{ padding: 0.9in 1.1in; }}
   .recap-heading {{
@@ -247,6 +249,18 @@ def _brief_block(section):
         if val
     )
 
+    followups = section.get("recommendedFollowUps") or []
+    if followups:
+        followups_html = "".join(
+            f'<div class="followup-item">'
+            f'<div class="followup-action">{i + 1}. {html.escape(fu.get("action") or "")}</div>'
+            f'<div class="followup-rationale">{html.escape(fu.get("rationale") or "")}</div>'
+            f'</div>'
+            for i, fu in enumerate(followups)
+        )
+    else:
+        followups_html = '<div class="followup-item"><div class="followup-rationale">No follow-up actions were drafted.</div></div>'
+
     return f"""
       <div class="brief-sidebar" style="background:{color};">
         <div class="avatar">{avatar_inner}</div>
@@ -268,10 +282,9 @@ def _brief_block(section):
           <div class="brief-text">{html.escape(section.get('kpmgAngle') or '')}</div>
         </div>
 
-        <div class="email-box" style="background:{tint}; border-left:4px solid {color};">
-          <div class="brief-label" style="color:{color};">Draft Follow-Up &mdash; {html.escape(section.get('sender') or '')}</div>
-          <div class="email-subject">{html.escape(section.get('emailSubject') or '')}</div>
-          <div class="email-body">{html.escape(section.get('emailBody') or '')}</div>
+        <div class="followups-box" style="background:{tint}; border-left:4px solid {color};">
+          <div class="brief-label" style="color:{color};">Recommended Follow-Ups &mdash; {html.escape(section.get('sender') or '')}</div>
+          {followups_html}
         </div>
       </div>
     """
@@ -317,7 +330,7 @@ def _recap_block(follow_up_areas, relevant_material):
 def build_brief_pdf(dinner, sections, follow_up_areas=None, relevant_material=None):
     """dinner: {"name": str, "theme": str}
     sections: list of {"name","role","org","sector","photoThumb","whyNow",
-                        "kpmgAngle","emailSubject","emailBody","sender"}
+                        "kpmgAngle","recommendedFollowUps","sender"}
     follow_up_areas: list of {"name","reason"}
     relevant_material: list of {"title","summary","url"}
     Returns PDF bytes.

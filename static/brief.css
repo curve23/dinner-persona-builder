@@ -282,7 +282,7 @@
   box-shadow: 0 0 0 2px rgba(63, 50, 176, 0.12);
 }
 
-.email-box {
+.followups-box {
   background: #F5F6FB;
   border-left: 4px solid var(--navy);
   border-radius: 2px;
@@ -299,46 +299,61 @@
   border-radius: 4px;
   padding: 3px 4px;
   background: transparent;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   cursor: pointer;
 }
 
-.email-subject-input {
+.followup-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.followup-item {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.followup-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.followup-action-input {
   width: 100%;
   font-family: inherit;
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 12.5px;
   color: var(--navy);
   border: 1px solid transparent;
   border-radius: 4px;
   padding: 4px 6px;
   background: transparent;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
-.email-body-textarea {
+.followup-rationale-input {
   width: 100%;
   font-family: inherit;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #3a3d5c;
   border: 1px solid transparent;
   border-radius: 4px;
   padding: 4px 6px;
   resize: vertical;
   background: transparent;
-  min-height: 140px;
 }
 
 .email-sender-select:hover,
-.email-subject-input:hover,
-.email-body-textarea:hover {
+.followup-action-input:hover,
+.followup-rationale-input:hover {
   background: white;
 }
 
 .email-sender-select:focus,
-.email-subject-input:focus,
-.email-body-textarea:focus {
+.followup-action-input:focus,
+.followup-rationale-input:focus {
   outline: none;
   background: white;
   border-color: var(--indigo);

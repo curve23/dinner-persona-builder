@@ -232,8 +232,7 @@ def generate_brief(dinner_id):
             "hook": a["hook"],
             "whyNow": sec.get("whyNow", ""),
             "kpmgAngle": sec.get("kpmgAngle", ""),
-            "emailSubject": sec.get("emailSubject", ""),
-            "emailBody": sec.get("emailBody", ""),
+            "recommendedFollowUps": sec.get("recommendedFollowUps", []),
             "sender": sec.get("sender", ""),
         })
 

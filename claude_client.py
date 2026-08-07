@@ -53,10 +53,30 @@ def _build_schema(attendee_ids, sender_names):
                                 "and says plainly when nothing matches."
                             ),
                         },
-                        "emailSubject": {"type": "string"},
-                        "emailBody": {
-                            "type": "string",
-                            "description": "A short, low-pressure, relationship-first follow-up email draft.",
+                        "recommendedFollowUps": {
+                            "type": "array",
+                            "description": (
+                                "2-4 concrete, distinct ways to engage this person -- options to choose from, "
+                                "not a script."
+                            ),
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "description": (
+                                            "A single concrete follow-up action, phrased as an instruction "
+                                            "(e.g. 'Reference her SPEED-reforms quote in a short note')."
+                                        ),
+                                    },
+                                    "rationale": {
+                                        "type": "string",
+                                        "description": "One sentence on why this specific action fits this person.",
+                                    },
+                                },
+                                "required": ["action", "rationale"],
+                                "additionalProperties": False,
+                            },
                         },
                         "sender": {
                             "type": "string",
@@ -64,7 +84,7 @@ def _build_schema(attendee_ids, sender_names):
                             "description": "The name of whichever actual KPMG attendee's focus areas best fit this person.",
                         },
                     },
-                    "required": ["attendeeId", "whyNow", "kpmgAngle", "emailSubject", "emailBody", "sender"],
+                    "required": ["attendeeId", "whyNow", "kpmgAngle", "recommendedFollowUps", "sender"],
                     "additionalProperties": False,
                 },
             },
@@ -123,13 +143,19 @@ general -- do not invent one.
 Reference Library titles by their EXACT name only when genuinely relevant -- if nothing in the library is a \
 good match, say so plainly rather than forcing a connection. Also ground this in the assigned sender's real \
 bio and focus areas, referencing their actual background honestly rather than generically.
-- emailSubject / emailBody: A short, warm, low-pressure, relationship-first follow-up email. This is NOT a sales \
-pitch -- no hard asks, no "let's schedule a call to discuss our services." It should read like a genuine \
-personal follow-up from someone who enjoyed the conversation, referencing the dinner and (if given) their hook, \
-and optionally offering something useful with zero pressure to reply or meet.
-- sender: the name of whichever KPMG attendee's focus areas best match this person's role and sector. Choose \
-ONLY from the KPMG attendees you were given -- never invent a KPMG sender who isn't in that list. If only one \
-KPMG attendee is listed, every section's sender must be that person.
+- recommendedFollowUps: 2-4 concrete, distinct ways to engage this person, each as {action, rationale}. `action` \
+is a single, specific instruction the partner could execute in their own words -- e.g. "Reference her \
+SPEED-reforms quote in a short note", "Share the KPMG Global Tech Report on government AI adoption", "Invite \
+her to the next relevant ITRM dinner or KPMG roundtable". `rationale` is one sentence on why THIS action fits \
+THIS person, grounded in their bio, hook, the dinner's themes, or a Reference Library item. These are options \
+for the partner to choose from and execute in their own words -- NOT a script: never write an action as prose \
+addressed to the attendee, and never draft anything that reads like an actual email. This is NOT a sales pitch \
+-- keep every action low-pressure and relationship-first (referencing something genuine, sharing a resource, \
+extending an invitation), never a hard ask like "schedule a call to discuss our services."
+- sender: the name of whichever KPMG attendee's focus areas best match this person's role and sector -- still \
+useful context for whoever acts on these recommendations. Choose ONLY from the KPMG attendees you were given -- \
+never invent a KPMG sender who isn't in that list. If only one KPMG attendee is listed, every section's sender \
+must be that person.
 
 After drafting all sections, also produce:
 - followUpAreas: one entry per flagged attendee -- {name, reason}, where reason is a single clause (under ~12 \
@@ -144,8 +170,9 @@ Critical constraints, in priority order:
 stay general and grounded only in their bio/role.
 2. NEVER fabricate a KPMG Reference Library title, URL, or claim a match that isn't genuinely relevant.
 3. NEVER assign a sender who isn't one of the actual KPMG attendees you were given.
-4. Keep every email low-pressure and relationship-first above everything else -- this matters more than any \
-other instruction here.
+4. Keep every recommended action low-pressure and relationship-first above everything else -- this matters more \
+than any other instruction here. Recommendations are options, not scripts -- never phrase one as prose addressed \
+to the attendee or as if it were an email itself.
 
 Respond with only the JSON object -- no other text."""
 
