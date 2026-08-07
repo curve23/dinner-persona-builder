@@ -100,6 +100,24 @@ CSS = f"""
   .reason-block {{ float: right; width: 47%; padding: 14pt 17pt; border-radius: 2pt; }}
   .reason-label {{ font-size: 8pt; text-transform: uppercase; letter-spacing: 1pt; font-weight: 700; margin-bottom: 6pt; }}
   .reason-text {{ font-size: 10.8pt; line-height: 1.55; color: {INK}; }}
+
+  .brief-sidebar {{
+    position: absolute; left: 0; top: 0; width: 2.15in; height: 8.5in;
+    padding: 0.5in 0.28in; color: {OFFWHITE}; text-align: center;
+  }}
+  .brief-content {{
+    position: absolute; left: 2.15in; top: 0; width: 8.35in; height: 8.5in;
+    padding: 0.55in 0.6in 0.5in 0.45in;
+  }}
+  .brief-section {{ margin-bottom: 16pt; }}
+  .brief-label {{
+    font-size: 9pt; text-transform: uppercase; letter-spacing: 1pt; font-weight: 700;
+    margin-bottom: 5pt;
+  }}
+  .brief-text {{ font-size: 11pt; line-height: 1.55; color: {INK}; }}
+  .email-box {{ padding: 16pt 18pt; border-radius: 2pt; margin-top: 6pt; }}
+  .email-subject {{ font-size: 11.5pt; font-weight: 700; color: {NAVY}; margin-bottom: 8pt; }}
+  .email-body {{ font-size: 10.5pt; line-height: 1.6; color: {INK}; white-space: pre-wrap; }}
 """
 
 
@@ -189,6 +207,80 @@ def build_pdf(dinner, guests):
         if len(pair) > 1:
             blocks += _guest_block(pair[1], "bottom")
         pages.append(f'<section class="page guest-page">{blocks}</section>')
+
+    doc = f"""<!DOCTYPE html>
+    <html><head><meta charset="utf-8"><style>{CSS}</style></head>
+    <body>{''.join(pages)}</body></html>
+    """
+    return HTML(string=doc).write_pdf()
+
+
+def _brief_block(section):
+    sector = section.get("sector") or "Other"
+    color = SECTOR_COLORS.get(sector, SECTOR_COLORS["Other"])
+    tint = SECTOR_TINTS.get(sector, SECTOR_TINTS["Other"])
+
+    if section.get("photoThumb"):
+        avatar_inner = f'<img src="{html.escape(section["photoThumb"])}" />'
+    else:
+        avatar_inner = f"<span>{html.escape(_initials(section.get('name') or ''))}</span>"
+
+    role_bits = " &middot; ".join(
+        f'<span class="{cls}">{html.escape(val)}</span>'
+        for cls, val in (("role", section.get("role") or ""), ("org", section.get("org") or ""))
+        if val
+    )
+
+    return f"""
+      <div class="brief-sidebar" style="background:{color};">
+        <div class="avatar">{avatar_inner}</div>
+        <div class="sector-tag">{html.escape(sector)}</div>
+      </div>
+      <div class="brief-content">
+        <div class="kicker" style="color:{color};">Post-Dinner Strategic Brief</div>
+        <h1>{html.escape(section.get('name') or '')}</h1>
+        <div class="role-line">{role_bits}</div>
+        <div class="rule" style="background:{color};"></div>
+
+        <div class="brief-section">
+          <div class="brief-label" style="color:{color};">Why Now</div>
+          <div class="brief-text">{html.escape(section.get('whyNow') or '')}</div>
+        </div>
+
+        <div class="brief-section">
+          <div class="brief-label" style="color:{color};">KPMG Angle</div>
+          <div class="brief-text">{html.escape(section.get('kpmgAngle') or '')}</div>
+        </div>
+
+        <div class="email-box" style="background:{tint}; border-left:4px solid {color};">
+          <div class="brief-label" style="color:{color};">Draft Follow-Up &mdash; {html.escape(section.get('sender') or '')}</div>
+          <div class="email-subject">{html.escape(section.get('emailSubject') or '')}</div>
+          <div class="email-body">{html.escape(section.get('emailBody') or '')}</div>
+        </div>
+      </div>
+    """
+
+
+def build_brief_pdf(dinner, sections):
+    """dinner: {"name": str, "theme": str}
+    sections: list of {"name","role","org","sector","photoThumb","whyNow",
+                        "kpmgAngle","emailSubject","emailBody","sender"}
+    Returns PDF bytes.
+    """
+    cover = f"""
+    <section class="page cover">
+      <div class="cover-inner">
+        <div class="cover-kicker">In The Room Media &middot; KPMG Post-Dinner Strategic Brief</div>
+        <h1 class="cover-title">{html.escape(dinner.get('name') or 'Private Dinner')}</h1>
+        <div class="cover-sub">Priority Follow-Up Brief</div>
+        <p class="cover-desc">{html.escape(dinner.get('theme') or '')}</p>
+      </div>
+    </section>
+    """
+
+    pages = [cover]
+    for section in sections:
+        pages.append(f'<section class="page brief-page">{_brief_block(section)}</section>')
 
     doc = f"""<!DOCTYPE html>
     <html><head><meta charset="utf-8"><style>{CSS}</style></head>

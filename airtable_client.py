@@ -13,6 +13,8 @@ AIRTABLE_API_KEY = os.environ["AIRTABLE_API_KEY"]
 BASE_ID = os.environ.get("AIRTABLE_BASE_ID", "appRgPaSgXtzA3xpP")
 DINNERS_TABLE = os.environ.get("AIRTABLE_DINNERS_TABLE", "Dinners")
 ATTENDEES_TABLE = os.environ.get("AIRTABLE_ATTENDEES_TABLE", "Dinner Attendees")
+REFERENCE_TABLE = os.environ.get("AIRTABLE_REFERENCE_TABLE", "KPMG Reference Library")
+TOUCHPOINTS_TABLE = os.environ.get("AIRTABLE_TOUCHPOINTS_TABLE", "Touchpoints")
 
 API_ROOT = "https://api.airtable.com/v0"
 CONTENT_ROOT = "https://content.airtable.com/v0"
@@ -31,6 +33,12 @@ def _get(url, params=None):
 
 def _patch(url, payload):
     resp = requests.patch(url, headers=HEADERS, json=payload, timeout=30)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _post(url, payload):
+    resp = requests.post(url, headers=HEADERS, json=payload, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
@@ -126,3 +134,26 @@ def upload_photo(attendee_record_id, filename, content_type, file_bytes):
     resp = requests.post(url, headers=HEADERS, json=payload, timeout=60)
     resp.raise_for_status()
     return resp.json()
+
+
+def list_reference_library():
+    """Return all KPMG Reference Library records -- used to ground the
+    Post-Dinner Brief's KPMG Angle in real assets rather than invented ones."""
+    records = []
+    offset = None
+    while True:
+        params = {"pageSize": 100}
+        if offset:
+            params["offset"] = offset
+        data = _get(f"{API_ROOT}/{BASE_ID}/{REFERENCE_TABLE}", params=params)
+        records.extend(data.get("records", []))
+        offset = data.get("offset")
+        if not offset:
+            break
+    return records
+
+
+def create_touchpoint(fields):
+    """Log one Touchpoints record, e.g. when a Post-Dinner Brief is generated."""
+    url = f"{API_ROOT}/{BASE_ID}/{TOUCHPOINTS_TABLE}"
+    return _post(url, {"fields": fields})

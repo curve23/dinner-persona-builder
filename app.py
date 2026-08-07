@@ -7,13 +7,15 @@ and it flows through automatically next time a PDF is generated here.
 Photos can be dragged in either on this page or directly onto the Photo
 attachment field in Airtable -- both write to the same place.
 """
+import datetime
 import io
 import os
 
 from flask import Flask, abort, jsonify, render_template, request, send_file
 
 import airtable_client as at
-from pdf_builder import build_pdf
+import claude_client
+from pdf_builder import build_brief_pdf, build_pdf
 
 app = Flask(__name__)
 
@@ -135,6 +137,102 @@ def dinner_pdf(dinner_id):
         as_attachment=False,
         download_name=filename,
     )
+
+
+@app.route("/dinner/<dinner_id>/brief")
+def dinner_brief(dinner_id):
+    dinner = _dinner_view(at.get_dinner(dinner_id))
+    attendees = [_attendee_view(r) for r in at.list_attendees_for_dinner(dinner_id)]
+    attendees.sort(key=lambda a: a["name"])
+    return render_template("brief.html", dinner=dinner, attendees=attendees)
+
+
+@app.route("/dinner/<dinner_id>/brief/generate", methods=["POST"])
+def generate_brief(dinner_id):
+    data = request.get_json(force=True, silent=True) or {}
+    themes = data.get("themes") or []
+    selections = data.get("selections") or {}
+
+    attendees = [_attendee_view(r) for r in at.list_attendees_for_dinner(dinner_id)]
+
+    flagged = []
+    for a in attendees:
+        sel = selections.get(a["id"]) or {}
+        if sel.get("attended") and sel.get("priority"):
+            a = dict(a)
+            a["hook"] = (sel.get("hook") or "").strip()
+            flagged.append(a)
+
+    if not flagged:
+        return jsonify({"error": "No attendees are flagged as both Attended and Priority follow-up."}), 400
+
+    try:
+        reference_records = at.list_reference_library()
+    except Exception:
+        return jsonify({"error": "Could not load the KPMG Reference Library from Airtable"}), 502
+
+    sections = []
+    for a in flagged:
+        try:
+            content = claude_client.generate_brief_section(a, themes, reference_records)
+        except Exception as e:
+            return jsonify({"error": f"Claude generation failed for {a['name']}: {e}"}), 502
+        sections.append({
+            "attendeeId": a["id"],
+            "name": a["name"],
+            "role": a["role"],
+            "org": a["org"],
+            "sector": a["sector"],
+            "photoThumb": a["photo_thumb"],
+            "hook": a["hook"],
+            **content,
+        })
+
+    return jsonify({"sections": sections})
+
+
+@app.route("/dinner/<dinner_id>/brief/pdf", methods=["POST"])
+def dinner_brief_pdf(dinner_id):
+    data = request.get_json(force=True, silent=True) or {}
+    dinner = data.get("dinner") or {}
+    sections = data.get("sections") or []
+    if not sections:
+        abort(400, "No brief sections to export.")
+    pdf_bytes = build_brief_pdf(dinner, sections)
+    filename = f"{(dinner.get('name') or 'Dinner').replace(' ', '_')}_KPMG_Post-Dinner_Brief.pdf"
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=False,
+        download_name=filename,
+    )
+
+
+@app.route("/dinner/<dinner_id>/brief/touchpoint", methods=["POST"])
+def log_brief_touchpoint(dinner_id):
+    data = request.get_json(force=True, silent=True) or {}
+    dinner_name = data.get("dinnerName") or ""
+    names = [n for n in (data.get("names") or []) if n]
+    if not names:
+        return jsonify({"error": "No flagged attendees to log."}), 400
+
+    fields = {
+        "Name": f"KPMG Post-Dinner Brief — {dinner_name}".strip(),
+        "Client": "KPMG",
+        "Type": "Event",
+        "Date": datetime.date.today().isoformat(),
+        "Description": (
+            f"Post-dinner strategic brief generated for {dinner_name}, "
+            f"covering {len(names)} priority follow-up(s)."
+        ),
+        "People": ", ".join(names),
+        "Source": "Dinner Persona Builder",
+    }
+    try:
+        at.create_touchpoint(fields)
+    except Exception:
+        return jsonify({"error": "Airtable write failed"}), 502
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":

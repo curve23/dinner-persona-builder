@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ dinner.name }} &middot; Post-Dinner Brief</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/brief.css">
+</head>
+<body data-dinner-id="{{ dinner.id }}" data-dinner-name="{{ dinner.name }}">
+  <div class="topbar">
+    <div class="brand">In The Room Media &middot; KPMG</div>
+    <h1>{{ dinner.name }} &middot; Post-Dinner Strategic Brief</h1>
+  </div>
+  <div class="wrap">
+    <div class="actions">
+      <a class="btn secondary" href="/dinner/{{ dinner.id }}">&larr; Back to dinner</a>
+    </div>
+
+    {% if attendees %}
+      <p class="hint">
+        Check <strong>Attended</strong> for guests who actually showed up (RSVP isn&rsquo;t the same as showing up),
+        and <strong>Priority follow-up</strong> only for people with real authority or influence over agencies KPMG
+        could work with. Only attendees flagged for <em>both</em> get a drafted section below.
+      </p>
+
+      <div class="brief-attendee-grid" id="attendee-select">
+        {% for a in attendees %}
+          <div class="brief-attendee-card" data-attendee-id="{{ a.id }}">
+            <div class="brief-attendee-top">
+              <div class="brief-avatar">
+                {% if a.photo_thumb %}
+                  <img src="{{ a.photo_thumb }}" />
+                {% else %}
+                  <span>{{ a.name[:1] }}</span>
+                {% endif %}
+              </div>
+              <div class="brief-attendee-identity">
+                <div class="brief-attendee-name">{{ a.name }}</div>
+                <div class="brief-attendee-role">{{ a.role }}{% if a.org %} &middot; {{ a.org }}{% endif %}</div>
+                <span class="sector-tag">{{ a.sector }}</span>
+              </div>
+            </div>
+            <div class="brief-checks">
+              <label><input type="checkbox" class="attended-check"> Attended</label>
+              <label><input type="checkbox" class="priority-check"> Priority follow-up</label>
+            </div>
+            <input type="text" class="editable-field hook-input" placeholder="Recent public quote or hook (optional)">
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="theme-box">
+        <label class="field-label">What came up in conversation</label>
+        <textarea class="editable-field theme-input" rows="2" id="theme-1" placeholder="Theme 1">{{ dinner.theme }}</textarea>
+        <textarea class="editable-field theme-input" rows="2" id="theme-2" placeholder="Theme 2 (optional)"></textarea>
+        <textarea class="editable-field theme-input" rows="2" id="theme-3" placeholder="Theme 3 (optional)"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="generate-btn">Generate Brief</button>
+      </div>
+
+      <div id="generate-status" class="save-status"></div>
+
+      <div id="brief-results"></div>
+
+      <div class="actions" id="export-actions" style="display:none;">
+        <button class="btn" id="export-pdf-btn">Export to PDF</button>
+        <button class="btn secondary" id="log-touchpoint-btn">Log to Touchpoints</button>
+        <span id="touchpoint-status" class="save-status"></span>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        No attendees linked to this dinner yet. Add rows to <strong>Dinner Attendees</strong> in
+        Airtable and link them to this dinner.
+      </div>
+    {% endif %}
+  </div>
+  <script src="/static/brief.js"></script>
+</body>
+</html>
