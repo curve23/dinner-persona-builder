@@ -56,26 +56,19 @@ def _build_schema(attendee_ids, sender_names):
                         "recommendedFollowUps": {
                             "type": "array",
                             "description": (
-                                "2-4 concrete, distinct ways to engage this person -- options to choose from, "
-                                "not a script."
+                                "2-4 distinct, dense, single-sentence recommendations -- each one combines a "
+                                "channel, a specific cited KPMG asset, a specific timely hook, and a specific "
+                                "offer into one sentence someone could act on immediately."
                             ),
                             "items": {
-                                "type": "object",
-                                "properties": {
-                                    "action": {
-                                        "type": "string",
-                                        "description": (
-                                            "A single concrete follow-up action, phrased as an instruction "
-                                            "(e.g. 'Reference her SPEED-reforms quote in a short note')."
-                                        ),
-                                    },
-                                    "rationale": {
-                                        "type": "string",
-                                        "description": "One sentence on why this specific action fits this person.",
-                                    },
-                                },
-                                "required": ["action", "rationale"],
-                                "additionalProperties": False,
+                                "type": "string",
+                                "description": (
+                                    "One dense sentence, e.g. \"Send email about dinner, attach 'From good to "
+                                    "great,' mention that if Ballot Prop 4 passes there will be a real "
+                                    "consolidation challenge across the 18 agencies, and offer to share how "
+                                    "KPMG has approached that exact kind of consolidation with a different "
+                                    "government agency.\""
+                                ),
                             },
                         },
                         "sender": {
@@ -143,15 +136,19 @@ general -- do not invent one.
 Reference Library titles by their EXACT name only when genuinely relevant -- if nothing in the library is a \
 good match, say so plainly rather than forcing a connection. Also ground this in the assigned sender's real \
 bio and focus areas, referencing their actual background honestly rather than generically.
-- recommendedFollowUps: 2-4 concrete, distinct ways to engage this person, each as {action, rationale}. `action` \
-is a single, specific instruction the partner could execute in their own words -- e.g. "Reference her \
-SPEED-reforms quote in a short note", "Share the KPMG Global Tech Report on government AI adoption", "Invite \
-her to the next relevant ITRM dinner or KPMG roundtable". `rationale` is one sentence on why THIS action fits \
-THIS person, grounded in their bio, hook, the dinner's themes, or a Reference Library item. These are options \
-for the partner to choose from and execute in their own words -- NOT a script: never write an action as prose \
-addressed to the attendee, and never draft anything that reads like an actual email. This is NOT a sales pitch \
--- keep every action low-pressure and relationship-first (referencing something genuine, sharing a resource, \
-extending an invitation), never a hard ask like "schedule a call to discuss our services."
+- recommendedFollowUps: 2-4 distinct, dense, single-sentence recommendations, each one concrete enough to act \
+on immediately. Every sentence should combine, where genuinely applicable: the CHANNEL (e.g. send an email, a \
+short note, a text), the SPECIFIC KPMG Reference Library asset to attach or share (cite its exact title -- \
+never invent one), the SPECIFIC timely hook to mention (drawn from their bio, their public quote/hook, or a \
+concrete detail from the dinner's themes -- never invented), and the SPECIFIC value-add or offer being made. \
+For example: "Send email about dinner, attach 'From good to great,' mention that if Ballot Prop 4 passes there \
+will be a real consolidation challenge across the 18 agencies, and offer to share how KPMG has approached that \
+exact kind of consolidation with a different government agency." NEVER write a generic recommendation like \
+"share relevant KPMG content" -- every recommendation must name the actual asset, the actual hook, and the \
+actual offer. If nothing in the Reference Library is a genuine match for a given recommendation, don't force \
+one in -- build that recommendation around the hook/theme and a general offer to help instead. This is NOT a \
+sales pitch -- keep every recommendation low-pressure and relationship-first (referencing something genuine, \
+sharing a resource, extending an invitation), never a hard ask like "schedule a call to discuss our services."
 - sender: the name of whichever KPMG attendee's focus areas best match this person's role and sector -- still \
 useful context for whoever acts on these recommendations. Choose ONLY from the KPMG attendees you were given -- \
 never invent a KPMG sender who isn't in that list. If only one KPMG attendee is listed, every section's sender \
@@ -170,9 +167,10 @@ Critical constraints, in priority order:
 stay general and grounded only in their bio/role.
 2. NEVER fabricate a KPMG Reference Library title, URL, or claim a match that isn't genuinely relevant.
 3. NEVER assign a sender who isn't one of the actual KPMG attendees you were given.
-4. Keep every recommended action low-pressure and relationship-first above everything else -- this matters more \
-than any other instruction here. Recommendations are options, not scripts -- never phrase one as prose addressed \
-to the attendee or as if it were an email itself.
+4. Keep every recommendation low-pressure and relationship-first above everything else -- this matters more \
+than any other instruction here. Recommendations are options for the partner to execute in their own words, \
+not a script -- never phrase one as prose addressed to the attendee or as if it were an email itself, and \
+never leave one generic when a specific asset, hook, or offer is available.
 
 Respond with only the JSON object -- no other text."""
 

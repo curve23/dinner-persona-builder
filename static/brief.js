@@ -258,10 +258,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .join("");
 
       const followupsHtml = (section.recommendedFollowUps || [])
-        .map((fu) => `
+        .map((text, i) => `
           <div class="followup-item">
-            <input type="text" class="editable-field followup-action-input" value="${escapeAttr(fu.action)}">
-            <textarea class="editable-field followup-rationale-input" rows="2">${escapeHtml(fu.rationale)}</textarea>
+            <span class="followup-number">${i + 1}.</span>
+            <textarea class="editable-field followup-text-input" rows="2">${escapeHtml(text)}</textarea>
           </div>
         `)
         .join("");
@@ -323,10 +323,9 @@ document.addEventListener("DOMContentLoaded", () => {
       whyNow: card.querySelector(".why-now").value,
       kpmgAngle: card.querySelector(".kpmg-angle").value,
       sender: card.querySelector(".email-sender-select").value,
-      recommendedFollowUps: Array.from(card.querySelectorAll(".followup-item")).map((item) => ({
-        action: item.querySelector(".followup-action-input").value,
-        rationale: item.querySelector(".followup-rationale-input").value,
-      })),
+      recommendedFollowUps: Array.from(card.querySelectorAll(".followup-item")).map(
+        (item) => item.querySelector(".followup-text-input").value
+      ),
     }));
   }
 

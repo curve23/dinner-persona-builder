@@ -116,10 +116,8 @@ CSS = f"""
   }}
   .brief-text {{ font-size: 11pt; line-height: 1.55; color: {INK}; }}
   .followups-box {{ padding: 16pt 18pt; border-radius: 2pt; margin-top: 6pt; }}
-  .followup-item {{ margin-bottom: 10pt; }}
+  .followup-item {{ font-size: 10.5pt; line-height: 1.55; color: {INK}; margin-bottom: 8pt; }}
   .followup-item:last-child {{ margin-bottom: 0; }}
-  .followup-action {{ font-size: 10.8pt; font-weight: 700; color: {NAVY}; line-height: 1.4; }}
-  .followup-rationale {{ font-size: 10pt; line-height: 1.5; color: {INK}; margin-top: 2pt; }}
 
   .recap-page {{ padding: 0.9in 1.1in; }}
   .recap-heading {{
@@ -252,14 +250,11 @@ def _brief_block(section):
     followups = section.get("recommendedFollowUps") or []
     if followups:
         followups_html = "".join(
-            f'<div class="followup-item">'
-            f'<div class="followup-action">{i + 1}. {html.escape(fu.get("action") or "")}</div>'
-            f'<div class="followup-rationale">{html.escape(fu.get("rationale") or "")}</div>'
-            f'</div>'
+            f'<div class="followup-item">{i + 1}. {html.escape(fu or "")}</div>'
             for i, fu in enumerate(followups)
         )
     else:
-        followups_html = '<div class="followup-item"><div class="followup-rationale">No follow-up actions were drafted.</div></div>'
+        followups_html = '<div class="followup-item">No follow-up recommendations were drafted.</div>'
 
     return f"""
       <div class="brief-sidebar" style="background:{color};">

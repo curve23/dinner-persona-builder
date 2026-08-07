@@ -310,6 +310,9 @@
 }
 
 .followup-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   border-top: 1px solid var(--border);
   padding-top: 10px;
 }
@@ -319,25 +322,20 @@
   padding-top: 0;
 }
 
-.followup-action-input {
-  width: 100%;
-  font-family: inherit;
+.followup-number {
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--navy);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 4px 6px;
-  background: transparent;
-  margin-bottom: 4px;
+  padding-top: 6px;
+  flex-shrink: 0;
 }
 
-.followup-rationale-input {
+.followup-text-input {
   width: 100%;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.5;
-  color: #3a3d5c;
+  color: var(--ink);
   border: 1px solid transparent;
   border-radius: 4px;
   padding: 4px 6px;
@@ -346,14 +344,12 @@
 }
 
 .email-sender-select:hover,
-.followup-action-input:hover,
-.followup-rationale-input:hover {
+.followup-text-input:hover {
   background: white;
 }
 
 .email-sender-select:focus,
-.followup-action-input:focus,
-.followup-rationale-input:focus {
+.followup-text-input:focus {
   outline: none;
   background: white;
   border-color: var(--indigo);
