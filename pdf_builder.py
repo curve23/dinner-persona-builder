@@ -72,8 +72,8 @@ CSS = f"""
   .avatar {{
     width: 1.55in; height: 1.55in; border-radius: 50%; border: 2.5pt solid {OFFWHITE};
     background: rgba(255,255,255,0.14); display: table-cell; text-align: center;
-    vertical-align: middle; font-family: 'Caladea', Georgia, serif; font-size: 32pt;
-    font-weight: 700; margin-bottom: 0.24in; overflow: hidden;
+    vertical-align: middle; font-family: 'Caladea', Georgia, serif; font-size: 24pt;
+    font-weight: 700; margin-bottom: 0.24in; overflow: hidden; letter-spacing: 1pt;
   }}
   .avatar img {{ width: 1.55in; height: 1.55in; object-fit: cover; border-radius: 50%; display: block; }}
   .sector-tag {{
@@ -109,11 +109,17 @@ CSS = f"""
     height: auto; min-height: 8.5in;
   }}
   .brief-sidebar {{
-    float: left; width: 2.15in; min-height: 8.5in;
+    /* Sized to its own content (avatar + sector tag) rather than the full
+       page height -- once this short float ends, .brief-content naturally
+       reclaims the full page width for everything below it. margin-right
+       (not .brief-content's padding, which a float ignores when smaller
+       than the float's own width) is what creates the visible gap between
+       the box and the wrapped text beside it. */
+    float: left; width: 2.15in; margin-right: 0.3in;
     padding: 0.5in 0.28in; color: {OFFWHITE}; text-align: center;
   }}
   .brief-content {{
-    padding: 0.55in 0.6in 0.5in 0.45in;
+    padding: 0.55in 0.6in 0.5in 0.65in;
   }}
   .brief-section {{ margin-bottom: 16pt; }}
   .brief-label {{
