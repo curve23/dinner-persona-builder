@@ -15,6 +15,7 @@ DINNERS_TABLE = os.environ.get("AIRTABLE_DINNERS_TABLE", "Dinners")
 ATTENDEES_TABLE = os.environ.get("AIRTABLE_ATTENDEES_TABLE", "Dinner Attendees")
 REFERENCE_TABLE = os.environ.get("AIRTABLE_REFERENCE_TABLE", "KPMG Reference Library")
 TOUCHPOINTS_TABLE = os.environ.get("AIRTABLE_TOUCHPOINTS_TABLE", "Touchpoints")
+KPMG_TEAM_TABLE = os.environ.get("AIRTABLE_KPMG_TEAM_TABLE", "KPMG Team")
 
 API_ROOT = "https://api.airtable.com/v0"
 CONTENT_ROOT = "https://content.airtable.com/v0"
@@ -157,3 +158,20 @@ def create_touchpoint(fields):
     """Log one Touchpoints record, e.g. when a Post-Dinner Brief is generated."""
     url = f"{API_ROOT}/{BASE_ID}/{TOUCHPOINTS_TABLE}"
     return _post(url, {"fields": fields})
+
+
+def list_kpmg_team():
+    """Return all KPMG Team records -- filtered client-side against a Dinner's
+    linked `KPMG Attendees` field, same pattern as list_attendees_for_dinner."""
+    records = []
+    offset = None
+    while True:
+        params = {"pageSize": 100}
+        if offset:
+            params["offset"] = offset
+        data = _get(f"{API_ROOT}/{BASE_ID}/{KPMG_TEAM_TABLE}", params=params)
+        records.extend(data.get("records", []))
+        offset = data.get("offset")
+        if not offset:
+            break
+    return records

@@ -86,6 +86,105 @@
   font-size: 12.5px;
 }
 
+/* ---- KPMG attendee banner ---- */
+.kpmg-attendee-banner {
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--indigo);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  color: #3a3d5c;
+}
+
+.kpmg-attendee-banner.warning {
+  border-left-color: var(--coral);
+  background: #FEEAEA;
+  color: #7a1f1f;
+}
+
+/* ---- Worth Following Up On / Relevant KPMG Material summary ---- */
+.brief-summary {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+}
+
+.summary-block {
+  margin-bottom: 20px;
+}
+
+.summary-block:last-child {
+  margin-bottom: 0;
+}
+
+.summary-heading {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  color: var(--navy);
+  margin: 0 0 10px 0;
+}
+
+.followup-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.followup-name.editable-field {
+  font-weight: 700;
+  color: var(--navy);
+  flex: 0 0 200px;
+}
+
+.followup-dash {
+  color: #9396b8;
+}
+
+.followup-reason.editable-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.material-row {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.material-row:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.material-title.editable-field {
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 14px;
+}
+
+.material-summary.editable-field {
+  font-size: 12.5px;
+  color: #3a3d5c;
+  margin: 4px 0;
+}
+
+.material-url.editable-field {
+  font-size: 11.5px;
+  color: var(--indigo);
+}
+
+.summary-empty {
+  font-size: 13px;
+  color: #8b8eb0;
+  margin: 0;
+}
+
 /* ---- Generated brief result cards ---- */
 .result-card {
   display: flex;

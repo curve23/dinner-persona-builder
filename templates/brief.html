@@ -7,7 +7,8 @@
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/brief.css">
 </head>
-<body data-dinner-id="{{ dinner.id }}" data-dinner-name="{{ dinner.name }}">
+<body data-dinner-id="{{ dinner.id }}" data-dinner-name="{{ dinner.name }}"
+      data-has-kpmg-attendees="{{ 'true' if kpmg_attendees else 'false' }}">
   <div class="topbar">
     <div class="brand">In The Room Media &middot; KPMG</div>
     <h1>{{ dinner.name }} &middot; Post-Dinner Strategic Brief</h1>
@@ -16,6 +17,18 @@
     <div class="actions">
       <a class="btn secondary" href="/dinner/{{ dinner.id }}">&larr; Back to dinner</a>
     </div>
+
+    {% if kpmg_attendees %}
+      <div class="kpmg-attendee-banner">
+        <strong>KPMG attendees:</strong>
+        {% for k in kpmg_attendees %}{{ k.name }}{% if k.title %} ({{ k.title }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+      </div>
+    {% else %}
+      <div class="kpmg-attendee-banner warning">
+        <strong>No KPMG attendees are linked to this dinner.</strong> Link at least one person under
+        Dinners &rarr; KPMG Attendees in Airtable before generating a brief, so drafts are grounded in a real sender.
+      </div>
+    {% endif %}
 
     {% if attendees %}
       <p class="hint">
@@ -63,6 +76,17 @@
 
       <div id="generate-status" class="save-status"></div>
 
+      <div id="brief-summary" class="brief-summary" style="display:none;">
+        <div class="summary-block">
+          <h2 class="summary-heading">Worth Following Up On</h2>
+          <div class="followup-list" id="followup-list"></div>
+        </div>
+        <div class="summary-block">
+          <h2 class="summary-heading">Relevant KPMG Material</h2>
+          <div class="material-list" id="material-list"></div>
+        </div>
+      </div>
+
       <div id="brief-results"></div>
 
       <div class="actions" id="export-actions" style="display:none;">
@@ -77,6 +101,7 @@
       </div>
     {% endif %}
   </div>
+  <script id="kpmg-attendees-data" type="application/json">{{ kpmg_attendees | tojson }}</script>
   <script src="/static/brief.js"></script>
 </body>
 </html>

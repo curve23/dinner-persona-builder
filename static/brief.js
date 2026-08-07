@@ -23,6 +23,13 @@ function escapeAttr(str) {
 document.addEventListener("DOMContentLoaded", () => {
   const dinnerId = document.body.dataset.dinnerId;
   const dinnerName = document.body.dataset.dinnerName;
+  const hasKpmgAttendees = document.body.dataset.hasKpmgAttendees === "true";
+
+  let kpmgAttendees = [];
+  const kpmgDataEl = document.getElementById("kpmg-attendees-data");
+  if (kpmgDataEl) {
+    try { kpmgAttendees = JSON.parse(kpmgDataEl.textContent) || []; } catch (e) { kpmgAttendees = []; }
+  }
 
   // ---- Attendee flagging ----
   document.querySelectorAll(".brief-attendee-card").forEach((card) => {
@@ -37,9 +44,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const generateBtn = document.getElementById("generate-btn");
   const statusEl = document.getElementById("generate-status");
+  const summaryEl = document.getElementById("brief-summary");
+  const followupList = document.getElementById("followup-list");
+  const materialList = document.getElementById("material-list");
   const resultsEl = document.getElementById("brief-results");
   const exportActions = document.getElementById("export-actions");
   if (!generateBtn) return; // no attendees on this dinner
+
+  if (!hasKpmgAttendees) {
+    generateBtn.disabled = true;
+    generateBtn.title = "Link at least one KPMG attendee in Airtable (Dinners → KPMG Attendees) first.";
+  }
 
   // ---- Generate ----
   generateBtn.addEventListener("click", () => {
@@ -58,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
     statusEl.textContent = "Generating brief… this can take a minute for several people.";
     statusEl.className = "save-status";
     generateBtn.disabled = true;
+    summaryEl.style.display = "none";
     resultsEl.innerHTML = "";
     exportActions.style.display = "none";
 
@@ -69,6 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
       .then(({ ok, data }) => {
         if (!ok) throw new Error(data.error || "Generation failed");
+        renderSummary(data.followUpAreas, data.relevantMaterial);
         renderResults(data.sections);
         statusEl.textContent = `Generated ${data.sections.length} section(s). Edit anything below before exporting.`;
         statusEl.className = "save-status ok";
@@ -79,10 +96,63 @@ document.addEventListener("DOMContentLoaded", () => {
         statusEl.className = "save-status err";
       })
       .finally(() => {
-        generateBtn.disabled = false;
+        generateBtn.disabled = !hasKpmgAttendees;
       });
   });
 
+  // ---- Worth Following Up On / Relevant KPMG Material ----
+  function renderSummary(followUpAreas, relevantMaterial) {
+    followupList.innerHTML = "";
+    if (followUpAreas && followUpAreas.length) {
+      followUpAreas.forEach((fa) => {
+        const row = document.createElement("div");
+        row.className = "followup-row";
+        row.innerHTML = `
+          <input type="text" class="editable-field followup-name" value="${escapeAttr(fa.name)}">
+          <span class="followup-dash">&mdash;</span>
+          <input type="text" class="editable-field followup-reason" value="${escapeAttr(fa.reason)}">
+        `;
+        followupList.appendChild(row);
+      });
+    } else {
+      followupList.innerHTML = '<p class="summary-empty">No one was flagged for follow-up.</p>';
+    }
+
+    materialList.innerHTML = "";
+    if (relevantMaterial && relevantMaterial.length) {
+      relevantMaterial.forEach((m) => {
+        const row = document.createElement("div");
+        row.className = "material-row";
+        row.innerHTML = `
+          <input type="text" class="editable-field material-title" value="${escapeAttr(m.title)}">
+          <textarea class="editable-field material-summary" rows="2">${escapeHtml(m.summary)}</textarea>
+          <input type="text" class="editable-field material-url" placeholder="Source URL (optional)" value="${escapeAttr(m.url || "")}">
+        `;
+        materialList.appendChild(row);
+      });
+    } else {
+      materialList.innerHTML = '<p class="summary-empty">No KPMG Reference Library material was cited for this dinner’s attendees.</p>';
+    }
+
+    summaryEl.style.display = "block";
+  }
+
+  function collectFollowUpAreas() {
+    return Array.from(followupList.querySelectorAll(".followup-row")).map((row) => ({
+      name: row.querySelector(".followup-name").value,
+      reason: row.querySelector(".followup-reason").value,
+    }));
+  }
+
+  function collectRelevantMaterial() {
+    return Array.from(materialList.querySelectorAll(".material-row")).map((row) => ({
+      title: row.querySelector(".material-title").value,
+      summary: row.querySelector(".material-summary").value,
+      url: row.querySelector(".material-url").value,
+    }));
+  }
+
+  // ---- Persona-style result cards ----
   function renderResults(sections) {
     resultsEl.innerHTML = "";
     sections.forEach((section) => {
@@ -97,6 +167,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const avatarInner = section.photoThumb
         ? `<img src="${escapeAttr(section.photoThumb)}">`
         : `<span>${escapeHtml(initials)}</span>`;
+
+      const senderOptions = kpmgAttendees
+        .map((k) => `<option value="${escapeAttr(k.name)}" ${k.name === section.sender ? "selected" : ""}>${escapeHtml(k.name)}</option>`)
+        .join("");
 
       const card = document.createElement("div");
       card.className = "result-card";
@@ -124,10 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="result-section email-box">
             <div class="result-label">Draft Follow-Up</div>
-            <select class="email-sender-select">
-              <option value="Cindy Cohen" ${section.sender === "Cindy Cohen" ? "selected" : ""}>Cindy Cohen</option>
-              <option value="Denis Serdiouk" ${section.sender === "Denis Serdiouk" ? "selected" : ""}>Denis Serdiouk</option>
-            </select>
+            <select class="email-sender-select">${senderOptions}</select>
             <input type="text" class="email-subject-input" value="${escapeAttr(section.emailSubject)}">
             <textarea class="email-body-textarea" rows="8">${escapeHtml(section.emailBody)}</textarea>
           </div>
@@ -163,14 +234,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---- Export to PDF ----
   document.getElementById("export-pdf-btn").addEventListener("click", (e) => {
     const btn = e.currentTarget;
-    const sections = collectSections();
     btn.disabled = true;
     fetch(`/dinner/${dinnerId}/brief/pdf`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         dinner: { name: dinnerName, theme: document.getElementById("theme-1").value },
-        sections,
+        sections: collectSections(),
+        followUpAreas: collectFollowUpAreas(),
+        relevantMaterial: collectRelevantMaterial(),
       }),
     })
       .then((r) => {
@@ -188,8 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---- Log to Touchpoints ----
   document.getElementById("log-touchpoint-btn").addEventListener("click", (e) => {
     const btn = e.currentTarget;
-    const sections = collectSections();
-    const names = sections.map((s) => s.name).filter(Boolean);
+    const followUpAreas = collectFollowUpAreas();
     const touchpointStatus = document.getElementById("touchpoint-status");
     touchpointStatus.textContent = "Logging…";
     touchpointStatus.className = "save-status";
@@ -198,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch(`/dinner/${dinnerId}/brief/touchpoint`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dinnerName, names }),
+      body: JSON.stringify({ dinnerName, followUpAreas }),
     })
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
       .then(({ ok, data }) => {

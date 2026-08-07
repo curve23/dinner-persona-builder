@@ -29,6 +29,7 @@ def _dinner_view(rec):
         "theme": f.get("Theme", ""),
         "status": f.get("Status", ""),
         "venue": f.get("Venue", ""),
+        "kpmg_attendee_ids": f.get("KPMG Attendees") or [],
     }
 
 
@@ -52,6 +53,17 @@ def _attendee_view(rec):
         "rsvp": f.get("RSVP Status", ""),
         "photo_url": photo_url,
         "photo_thumb": photo_thumb,
+    }
+
+
+def _kpmg_team_view(rec):
+    f = rec.get("fields", {})
+    return {
+        "id": rec["id"],
+        "name": f.get("Name", ""),
+        "title": f.get("Title", ""),
+        "focus_areas": f.get("Focus Areas") or [],
+        "bio": f.get("Bio", ""),
     }
 
 
@@ -144,7 +156,15 @@ def dinner_brief(dinner_id):
     dinner = _dinner_view(at.get_dinner(dinner_id))
     attendees = [_attendee_view(r) for r in at.list_attendees_for_dinner(dinner_id)]
     attendees.sort(key=lambda a: a["name"])
-    return render_template("brief.html", dinner=dinner, attendees=attendees)
+
+    kpmg_attendee_ids = set(dinner["kpmg_attendee_ids"])
+    kpmg_attendees = [
+        _kpmg_team_view(r) for r in at.list_kpmg_team() if r["id"] in kpmg_attendee_ids
+    ]
+
+    return render_template(
+        "brief.html", dinner=dinner, attendees=attendees, kpmg_attendees=kpmg_attendees
+    )
 
 
 @app.route("/dinner/<dinner_id>/brief/generate", methods=["POST"])
@@ -153,6 +173,7 @@ def generate_brief(dinner_id):
     themes = data.get("themes") or []
     selections = data.get("selections") or {}
 
+    dinner = _dinner_view(at.get_dinner(dinner_id))
     attendees = [_attendee_view(r) for r in at.list_attendees_for_dinner(dinner_id)]
 
     flagged = []
@@ -166,17 +187,32 @@ def generate_brief(dinner_id):
     if not flagged:
         return jsonify({"error": "No attendees are flagged as both Attended and Priority follow-up."}), 400
 
+    kpmg_attendee_ids = set(dinner["kpmg_attendee_ids"])
+    kpmg_team = [r for r in at.list_kpmg_team() if r["id"] in kpmg_attendee_ids]
+    if not kpmg_team:
+        return jsonify({
+            "error": (
+                "No KPMG attendees are linked to this dinner in Airtable. Link at least one "
+                "person under Dinners → KPMG Attendees before generating a brief."
+            )
+        }), 400
+
     try:
         reference_records = at.list_reference_library()
     except Exception:
         return jsonify({"error": "Could not load the KPMG Reference Library from Airtable"}), 502
 
+    try:
+        result = claude_client.generate_brief(flagged, themes, reference_records, kpmg_team)
+    except Exception as e:
+        return jsonify({"error": f"Claude generation failed: {e}"}), 502
+
+    attendee_by_id = {a["id"]: a for a in flagged}
     sections = []
-    for a in flagged:
-        try:
-            content = claude_client.generate_brief_section(a, themes, reference_records)
-        except Exception as e:
-            return jsonify({"error": f"Claude generation failed for {a['name']}: {e}"}), 502
+    for sec in result.get("sections") or []:
+        a = attendee_by_id.get(sec.get("attendeeId"))
+        if not a:
+            continue
         sections.append({
             "attendeeId": a["id"],
             "name": a["name"],
@@ -185,10 +221,18 @@ def generate_brief(dinner_id):
             "sector": a["sector"],
             "photoThumb": a["photo_thumb"],
             "hook": a["hook"],
-            **content,
+            "whyNow": sec.get("whyNow", ""),
+            "kpmgAngle": sec.get("kpmgAngle", ""),
+            "emailSubject": sec.get("emailSubject", ""),
+            "emailBody": sec.get("emailBody", ""),
+            "sender": sec.get("sender", ""),
         })
 
-    return jsonify({"sections": sections})
+    return jsonify({
+        "sections": sections,
+        "followUpAreas": result.get("followUpAreas") or [],
+        "relevantMaterial": result.get("relevantMaterial") or [],
+    })
 
 
 @app.route("/dinner/<dinner_id>/brief/pdf", methods=["POST"])
@@ -198,7 +242,12 @@ def dinner_brief_pdf(dinner_id):
     sections = data.get("sections") or []
     if not sections:
         abort(400, "No brief sections to export.")
-    pdf_bytes = build_brief_pdf(dinner, sections)
+    pdf_bytes = build_brief_pdf(
+        dinner,
+        sections,
+        follow_up_areas=data.get("followUpAreas") or [],
+        relevant_material=data.get("relevantMaterial") or [],
+    )
     filename = f"{(dinner.get('name') or 'Dinner').replace(' ', '_')}_KPMG_Post-Dinner_Brief.pdf"
     return send_file(
         io.BytesIO(pdf_bytes),
@@ -212,19 +261,19 @@ def dinner_brief_pdf(dinner_id):
 def log_brief_touchpoint(dinner_id):
     data = request.get_json(force=True, silent=True) or {}
     dinner_name = data.get("dinnerName") or ""
-    names = [n for n in (data.get("names") or []) if n]
-    if not names:
+    follow_up_areas = [fa for fa in (data.get("followUpAreas") or []) if fa.get("name")]
+    if not follow_up_areas:
         return jsonify({"error": "No flagged attendees to log."}), 400
+
+    names = [fa["name"] for fa in follow_up_areas]
+    description = "\n".join(f"{fa['name']} — {fa.get('reason', '')}" for fa in follow_up_areas)
 
     fields = {
         "Name": f"KPMG Post-Dinner Brief — {dinner_name}".strip(),
         "Client": "KPMG",
         "Type": "Event",
         "Date": datetime.date.today().isoformat(),
-        "Description": (
-            f"Post-dinner strategic brief generated for {dinner_name}, "
-            f"covering {len(names)} priority follow-up(s)."
-        ),
+        "Description": description,
         "People": ", ".join(names),
         "Source": "Dinner Persona Builder",
     }

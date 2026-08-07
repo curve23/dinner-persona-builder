@@ -118,6 +118,22 @@ CSS = f"""
   .email-box {{ padding: 16pt 18pt; border-radius: 2pt; margin-top: 6pt; }}
   .email-subject {{ font-size: 11.5pt; font-weight: 700; color: {NAVY}; margin-bottom: 8pt; }}
   .email-body {{ font-size: 10.5pt; line-height: 1.6; color: {INK}; white-space: pre-wrap; }}
+
+  .recap-page {{ padding: 0.9in 1.1in; }}
+  .recap-heading {{
+    font-family: 'Caladea', Georgia, serif; font-size: 20pt; color: {NAVY};
+    margin: 0 0 14pt 0; font-weight: 700;
+  }}
+  .recap-heading.second {{ margin-top: 0.5in; }}
+  .recap-list {{ margin-bottom: 10pt; }}
+  .recap-row {{ font-size: 11.5pt; line-height: 1.7; color: {INK}; margin-bottom: 4pt; }}
+  .recap-name {{ font-weight: 700; color: {NAVY}; }}
+  .recap-dash {{ color: #9396B8; margin: 0 5pt; }}
+  .recap-material-row {{ margin-bottom: 10pt; }}
+  .recap-material-title {{ font-weight: 700; font-size: 11.5pt; color: {NAVY}; }}
+  .recap-material-summary {{ font-size: 10.5pt; line-height: 1.5; color: {INK}; }}
+  .recap-material-url {{ font-size: 9pt; color: {INDIGO}; }}
+  .recap-empty {{ font-size: 11pt; color: #8B8EB0; font-style: italic; }}
 """
 
 
@@ -261,10 +277,49 @@ def _brief_block(section):
     """
 
 
-def build_brief_pdf(dinner, sections):
+def _recap_block(follow_up_areas, relevant_material):
+    if follow_up_areas:
+        followup_html = "".join(
+            f'<div class="recap-row"><span class="recap-name">{html.escape(fa.get("name") or "")}</span>'
+            f'<span class="recap-dash">&mdash;</span>'
+            f'<span class="recap-reason">{html.escape(fa.get("reason") or "")}</span></div>'
+            for fa in follow_up_areas
+        )
+    else:
+        followup_html = '<div class="recap-empty">No attendees were flagged for follow-up.</div>'
+
+    if relevant_material:
+        material_html = "".join(
+            f'<div class="recap-material-row">'
+            f'<div class="recap-material-title">{html.escape(m.get("title") or "")}</div>'
+            f'<div class="recap-material-summary">{html.escape(m.get("summary") or "")}</div>'
+            + (
+                f'<div class="recap-material-url">{html.escape(m.get("url") or "")}</div>'
+                if m.get("url") else ""
+            )
+            + "</div>"
+            for m in relevant_material
+        )
+    else:
+        material_html = (
+            '<div class="recap-empty">No KPMG Reference Library material was cited '
+            "for this dinner&rsquo;s attendees.</div>"
+        )
+
+    return f"""
+      <div class="recap-heading">Worth Following Up On</div>
+      <div class="recap-list">{followup_html}</div>
+      <div class="recap-heading second">Relevant KPMG Material</div>
+      <div class="recap-list">{material_html}</div>
+    """
+
+
+def build_brief_pdf(dinner, sections, follow_up_areas=None, relevant_material=None):
     """dinner: {"name": str, "theme": str}
     sections: list of {"name","role","org","sector","photoThumb","whyNow",
                         "kpmgAngle","emailSubject","emailBody","sender"}
+    follow_up_areas: list of {"name","reason"}
+    relevant_material: list of {"title","summary","url"}
     Returns PDF bytes.
     """
     cover = f"""
@@ -278,7 +333,9 @@ def build_brief_pdf(dinner, sections):
     </section>
     """
 
-    pages = [cover]
+    recap = f'<section class="page recap-page">{_recap_block(follow_up_areas or [], relevant_material or [])}</section>'
+
+    pages = [cover, recap]
     for section in sections:
         pages.append(f'<section class="page brief-page">{_brief_block(section)}</section>')
 
