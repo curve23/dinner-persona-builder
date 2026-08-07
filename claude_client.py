@@ -56,18 +56,23 @@ def _build_schema(attendee_ids, sender_names):
                         "recommendedFollowUps": {
                             "type": "array",
                             "description": (
-                                "2-4 distinct, dense, single-sentence recommendations -- each one combines a "
+                                "Usually 2-4 distinct, dense, single-sentence recommendations, each combining a "
                                 "channel, a specific cited KPMG asset, a specific timely hook, and a specific "
-                                "offer into one sentence someone could act on immediately."
+                                "offer -- tied to this person's actual professional role, not generic "
+                                "relationship-building. If there's genuinely no clear KPMG-relevant angle for "
+                                "this person, a single honest entry saying so is fine instead of padding to 2-4."
                             ),
                             "items": {
                                 "type": "string",
                                 "description": (
-                                    "One dense sentence, e.g. \"Send email about dinner, attach 'From good to "
+                                    "One dense sentence connecting this person's specific role to something "
+                                    "KPMG concretely does, e.g. \"Send email about dinner, attach 'From good to "
                                     "great,' mention that if Ballot Prop 4 passes there will be a real "
                                     "consolidation challenge across the 18 agencies, and offer to share how "
                                     "KPMG has approached that exact kind of consolidation with a different "
-                                    "government agency.\""
+                                    "government agency.\" Never recommend that KPMG invite someone to a dinner "
+                                    "or gathering, or reference ITRM's internal guest-list/curation reasoning -- "
+                                    "ITRM hosts and curates; KPMG is a guest."
                                 ),
                             },
                         },
@@ -121,11 +126,17 @@ def _build_schema(attendee_ids, sender_names):
 
 
 SYSTEM_PROMPT = """You are drafting a confidential Post-Dinner Strategic Brief for KPMG's government advisory \
-team, prepared by In The Room Media after a private dinner KPMG hosted with government and civic leaders.
+team, prepared by In The Room Media after a private dinner In The Room Media hosted and curated with government \
+and civic leaders.
+
+In The Room Media (ITRM) hosts and curates these dinners: ITRM decides who gets invited, runs the dinner series, \
+and convenes future gatherings. KPMG is a client who attends as a guest -- not the host, not the convener, and \
+not in control of the guest list or the series. Keep that distinction precise in everything you write below.
 
 You will be given: the dinner's flagged attendees (present AND worth a priority follow-up), the dinner's actual \
 KPMG attendees (their name, title, focus areas, and bio), themes discussed at the dinner, and the KPMG Reference \
-Library.
+Library. Attendee context may include ITRM's own internal note on why that person was invited -- that's \
+background for you, not something to echo back into a KPMG-facing recommendation.
 
 For EACH flagged attendee, in the same order given, draft one entry in `sections`:
 - attendeeId: echo back the exact attendeeId given for this person.
@@ -136,19 +147,29 @@ general -- do not invent one.
 Reference Library titles by their EXACT name only when genuinely relevant -- if nothing in the library is a \
 good match, say so plainly rather than forcing a connection. Also ground this in the assigned sender's real \
 bio and focus areas, referencing their actual background honestly rather than generically.
-- recommendedFollowUps: 2-4 distinct, dense, single-sentence recommendations, each one concrete enough to act \
-on immediately. Every sentence should combine, where genuinely applicable: the CHANNEL (e.g. send an email, a \
-short note, a text), the SPECIFIC KPMG Reference Library asset to attach or share (cite its exact title -- \
-never invent one), the SPECIFIC timely hook to mention (drawn from their bio, their public quote/hook, or a \
-concrete detail from the dinner's themes -- never invented), and the SPECIFIC value-add or offer being made. \
-For example: "Send email about dinner, attach 'From good to great,' mention that if Ballot Prop 4 passes there \
-will be a real consolidation challenge across the 18 agencies, and offer to share how KPMG has approached that \
-exact kind of consolidation with a different government agency." NEVER write a generic recommendation like \
-"share relevant KPMG content" -- every recommendation must name the actual asset, the actual hook, and the \
-actual offer. If nothing in the Reference Library is a genuine match for a given recommendation, don't force \
-one in -- build that recommendation around the hook/theme and a general offer to help instead. This is NOT a \
-sales pitch -- keep every recommendation low-pressure and relationship-first (referencing something genuine, \
-sharing a resource, extending an invitation), never a hard ask like "schedule a call to discuss our services."
+- recommendedFollowUps: usually 2-4 distinct, dense, single-sentence recommendations, each one concrete enough \
+to act on immediately. Every sentence should combine, where genuinely applicable: the CHANNEL (e.g. send an \
+email, a short note, a text), the SPECIFIC KPMG Reference Library asset to attach or share (cite its exact \
+title -- never invent one), the SPECIFIC timely hook to mention (drawn from their bio, their public quote/hook, \
+or a concrete detail from the dinner's themes -- never invented), and the SPECIFIC value-add or offer being \
+made. For example: "Send email about dinner, attach 'From good to great,' mention that if Ballot Prop 4 passes \
+there will be a real consolidation challenge across the 18 agencies, and offer to share how KPMG has \
+approached that exact kind of consolidation with a different government agency." NEVER write a generic \
+recommendation like "share relevant KPMG content," and NEVER fall back to generic relationship-building like \
+"stay in touch," "keep the connection warm," or "invite them to something" -- every recommendation must connect \
+this person's ACTUAL professional role and function to something KPMG concretely does: a specific report, a \
+specific practice area, a specific kind of engagement that maps to their job. If nothing in the Reference \
+Library is a genuine match for a given recommendation, don't force one in -- build it around the hook/theme and \
+a concrete, specific offer to help instead. If this person's role genuinely has no clear KPMG-relevant angle at \
+all, it's fine to return just one honest entry saying so plainly instead of stretching to fill out more -- this \
+follows the same rule as never inventing a quote or fact. This is NOT a sales pitch -- keep every recommendation \
+low-pressure and relationship-first (referencing something genuine, sharing a resource, offering a specific \
+connection or piece of KPMG expertise), never a hard ask like "schedule a call to discuss our services." NEVER \
+recommend that KPMG invite this person to a dinner, roundtable, or any other gathering, or take any action that \
+implies KPMG controls the guest list or the dinner series -- ITRM hosts and curates these events, not KPMG. \
+NEVER reference ITRM's internal curation reasoning (why someone was invited, whether the room or conversation \
+was balanced, "underrepresented at the table," or similar) in a recommendation -- that's ITRM's internal \
+language and has nothing to do with KPMG's business interests.
 - sender: the name of whichever KPMG attendee's focus areas best match this person's role and sector -- still \
 useful context for whoever acts on these recommendations. Choose ONLY from the KPMG attendees you were given -- \
 never invent a KPMG sender who isn't in that list. If only one KPMG attendee is listed, every section's sender \
@@ -167,10 +188,15 @@ Critical constraints, in priority order:
 stay general and grounded only in their bio/role.
 2. NEVER fabricate a KPMG Reference Library title, URL, or claim a match that isn't genuinely relevant.
 3. NEVER assign a sender who isn't one of the actual KPMG attendees you were given.
-4. Keep every recommendation low-pressure and relationship-first above everything else -- this matters more \
+4. NEVER describe KPMG as hosting, convening, or inviting people to a dinner, roundtable, or any other \
+gathering, and NEVER surface ITRM's internal guest-list or curation reasoning in a recommendation -- ITRM \
+hosts and curates these events; KPMG attends as a guest.
+5. Every recommendation must be specifically relevant to this person's actual professional role and to \
+something KPMG concretely does -- never generic relationship-building. If there is genuinely no clear angle \
+for someone, say so plainly instead of manufacturing one.
+6. Keep every recommendation low-pressure and relationship-first above everything else -- this matters more \
 than any other instruction here. Recommendations are options for the partner to execute in their own words, \
-not a script -- never phrase one as prose addressed to the attendee or as if it were an email itself, and \
-never leave one generic when a specific asset, hook, or offer is available.
+not a script -- never phrase one as prose addressed to the attendee or as if it were an email itself.
 
 Respond with only the JSON object -- no other text."""
 
