@@ -101,12 +101,18 @@ CSS = f"""
   .reason-label {{ font-size: 8pt; text-transform: uppercase; letter-spacing: 1pt; font-weight: 700; margin-bottom: 6pt; }}
   .reason-text {{ font-size: 10.8pt; line-height: 1.55; color: {INK}; }}
 
+  .brief-page {{
+    /* Overrides .page's fixed 8.5in height: absolute positioning below has
+       been replaced with a float + normal-flow layout specifically so that
+       content too long for one page flows onto a continuation page instead
+       of being silently clipped at the page boundary. */
+    height: auto; min-height: 8.5in;
+  }}
   .brief-sidebar {{
-    position: absolute; left: 0; top: 0; width: 2.15in; height: 8.5in;
+    float: left; width: 2.15in; min-height: 8.5in;
     padding: 0.5in 0.28in; color: {OFFWHITE}; text-align: center;
   }}
   .brief-content {{
-    position: absolute; left: 2.15in; top: 0; width: 8.35in; height: 8.5in;
     padding: 0.55in 0.6in 0.5in 0.45in;
   }}
   .brief-section {{ margin-bottom: 16pt; }}

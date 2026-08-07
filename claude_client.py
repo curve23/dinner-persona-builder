@@ -42,15 +42,18 @@ def _build_schema(attendee_ids, sender_names):
                         },
                         "whyNow": {
                             "type": "string",
-                            "description": "1-2 sentences on why a follow-up with this person is worth doing now.",
+                            "description": (
+                                "2-3 sentences MAX on why a follow-up with this person is worth doing now. "
+                                "Punchy, not exhaustive."
+                            ),
                         },
                         "kpmgAngle": {
                             "type": "string",
                             "description": (
-                                "How KPMG's capabilities connect to this person's role and authority. "
-                                "Cites matching Reference Library titles by exact name when genuinely "
-                                "relevant, grounded in the assigned sender's real bio and focus areas, "
-                                "and says plainly when nothing matches."
+                                "2-3 sentences MAX on how KPMG's capabilities connect to this person's role "
+                                "and authority. Punchy, not exhaustive. Cites matching Reference Library "
+                                "titles by exact name when genuinely relevant, grounded in the assigned "
+                                "sender's real bio and focus areas, and says plainly when nothing matches."
                             ),
                         },
                         "recommendedFollowUps": {
@@ -140,13 +143,14 @@ background for you, not something to echo back into a KPMG-facing recommendation
 
 For EACH flagged attendee, in the same order given, draft one entry in `sections`:
 - attendeeId: echo back the exact attendeeId given for this person.
-- whyNow: 1-2 sentences on why a follow-up with this person is worth doing now. Ground this ONLY in their stated \
-role, bio, and (if provided) their recent public quote or hook. If no hook was provided, keep this honest and \
-general -- do not invent one.
-- kpmgAngle: How KPMG's relevant capabilities connect to this person's role and authority. Cite matching \
-Reference Library titles by their EXACT name only when genuinely relevant -- if nothing in the library is a \
-good match, say so plainly rather than forcing a connection. Also ground this in the assigned sender's real \
-bio and focus areas, referencing their actual background honestly rather than generically.
+- whyNow: 2-3 sentences MAX on why a follow-up with this person is worth doing now. Punchy, not exhaustive -- \
+cut anything that doesn't earn its place. Ground this ONLY in their stated role, bio, and (if provided) their \
+recent public quote or hook. If no hook was provided, keep this honest and general -- do not invent one.
+- kpmgAngle: 2-3 sentences MAX on how KPMG's relevant capabilities connect to this person's role and authority. \
+Punchy, not exhaustive -- state the connection and move on, don't build the full case. Cite matching Reference \
+Library titles by their EXACT name only when genuinely relevant -- if nothing in the library is a good match, \
+say so plainly in one sentence rather than forcing a connection. Ground this in the assigned sender's real bio \
+and focus areas, but reference their background in a phrase, not a paragraph.
 - recommendedFollowUps: usually 2-4 distinct, dense, single-sentence recommendations, each one concrete enough \
 to act on immediately. Every sentence should combine, where genuinely applicable: the CHANNEL (e.g. send an \
 email, a short note, a text), the SPECIFIC KPMG Reference Library asset to attach or share (cite its exact \
