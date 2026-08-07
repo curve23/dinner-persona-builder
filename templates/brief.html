@@ -16,6 +16,7 @@
   <div class="wrap">
     <div class="actions">
       <a class="btn secondary" href="/dinner/{{ dinner.id }}">&larr; Back to dinner</a>
+      <span id="autosave-status" class="save-status"></span>
     </div>
 
     {% if kpmg_attendees %}
@@ -102,6 +103,7 @@
     {% endif %}
   </div>
   <script id="kpmg-attendees-data" type="application/json">{{ kpmg_attendees | tojson }}</script>
+  <script id="brief-draft-data" type="application/json">{{ draft | tojson }}</script>
   <script src="/static/brief.js"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@ attachment field in Airtable -- both write to the same place.
 """
 import datetime
 import io
+import json
 import os
 
 from flask import Flask, abort, jsonify, render_template, request, send_file
@@ -30,6 +31,7 @@ def _dinner_view(rec):
         "status": f.get("Status", ""),
         "venue": f.get("Venue", ""),
         "kpmg_attendee_ids": f.get("KPMG Attendees") or [],
+        "brief_draft": f.get("Brief Draft", ""),
     }
 
 
@@ -162,8 +164,15 @@ def dinner_brief(dinner_id):
         _kpmg_team_view(r) for r in at.list_kpmg_team() if r["id"] in kpmg_attendee_ids
     ]
 
+    draft = None
+    if dinner["brief_draft"]:
+        try:
+            draft = json.loads(dinner["brief_draft"])
+        except ValueError:
+            draft = None
+
     return render_template(
-        "brief.html", dinner=dinner, attendees=attendees, kpmg_attendees=kpmg_attendees
+        "brief.html", dinner=dinner, attendees=attendees, kpmg_attendees=kpmg_attendees, draft=draft
     )
 
 

@@ -91,7 +91,7 @@ ATTENDEE_EDITABLE_FIELDS = {
     "Name", "Role", "Organization", "Location", "Sector", "Bio",
     "Reason for Inviting",
 }
-DINNER_EDITABLE_FIELDS = {"Dinner Name", "Theme", "Venue"}
+DINNER_EDITABLE_FIELDS = {"Dinner Name", "Theme", "Venue", "Brief Draft"}
 
 SECTOR_CHOICES = [
     "Government", "Private Sector", "Nonprofit & Advocacy",

@@ -1,5 +1,13 @@
 // Post-Dinner Strategic Brief: attendee flagging, brief generation, in-place
-// editing of the drafted sections, PDF export, and Touchpoints logging.
+// editing of the drafted sections, autosave, PDF export, and Touchpoints
+// logging.
+//
+// Autosave: the entire working draft (attendee flags/hooks, themes, and any
+// generated sections/summary) is written to Airtable's Dinners."Brief Draft"
+// field (a JSON blob) via the same generic /dinner/:id/field endpoint the
+// persona page already uses, debounced on every edit. On page load, that
+// field is read back server-side and embedded as `#brief-draft-data` so a
+// reload restores exactly where you left off.
 
 const SECTOR_COLORS = {
   "Government": "#0B1059",
@@ -9,6 +17,8 @@ const SECTOR_COLORS = {
   "Media": "#3F32B0",
   "Other": "#5B5F8A",
 };
+
+const SAVE_DEBOUNCE_MS = 900;
 
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -31,19 +41,15 @@ document.addEventListener("DOMContentLoaded", () => {
     try { kpmgAttendees = JSON.parse(kpmgDataEl.textContent) || []; } catch (e) { kpmgAttendees = []; }
   }
 
-  // ---- Attendee flagging ----
-  document.querySelectorAll(".brief-attendee-card").forEach((card) => {
-    const attendedCheck = card.querySelector(".attended-check");
-    const priorityCheck = card.querySelector(".priority-check");
-    const updateFlag = () => {
-      card.classList.toggle("flagged", attendedCheck.checked && priorityCheck.checked);
-    };
-    attendedCheck.addEventListener("change", updateFlag);
-    priorityCheck.addEventListener("change", updateFlag);
-  });
+  let draft = null;
+  const draftDataEl = document.getElementById("brief-draft-data");
+  if (draftDataEl) {
+    try { draft = JSON.parse(draftDataEl.textContent) || null; } catch (e) { draft = null; }
+  }
 
   const generateBtn = document.getElementById("generate-btn");
   const statusEl = document.getElementById("generate-status");
+  const autosaveStatusEl = document.getElementById("autosave-status");
   const summaryEl = document.getElementById("brief-summary");
   const followupList = document.getElementById("followup-list");
   const materialList = document.getElementById("material-list");
@@ -55,6 +61,82 @@ document.addEventListener("DOMContentLoaded", () => {
     generateBtn.disabled = true;
     generateBtn.title = "Link at least one KPMG attendee in Airtable (Dinners → KPMG Attendees) first.";
   }
+
+  // ---- Autosave ----
+  let saveTimer = null;
+
+  function scheduleSave() {
+    if (autosaveStatusEl) {
+      autosaveStatusEl.textContent = "Saving…";
+      autosaveStatusEl.className = "save-status";
+    }
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(doSave, SAVE_DEBOUNCE_MS);
+  }
+
+  function buildDraftPayload() {
+    const selections = {};
+    document.querySelectorAll(".brief-attendee-card").forEach((card) => {
+      selections[card.dataset.attendeeId] = {
+        attended: card.querySelector(".attended-check").checked,
+        priority: card.querySelector(".priority-check").checked,
+        hook: card.querySelector(".hook-input").value,
+      };
+    });
+    const themes = ["theme-1", "theme-2", "theme-3"].map((id) => document.getElementById(id).value);
+    const hasResults = resultsEl.children.length > 0;
+    return {
+      selections,
+      themes,
+      sections: hasResults ? collectSections() : null,
+      followUpAreas: hasResults ? collectFollowUpAreas() : null,
+      relevantMaterial: hasResults ? collectRelevantMaterial() : null,
+      savedAt: new Date().toISOString(),
+    };
+  }
+
+  function doSave() {
+    fetch(`/dinner/${dinnerId}/field`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ field: "Brief Draft", value: JSON.stringify(buildDraftPayload()) }),
+    })
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error((data && data.error) || "Save failed");
+        if (autosaveStatusEl) {
+          autosaveStatusEl.textContent = "Saved";
+          autosaveStatusEl.className = "save-status ok";
+          setTimeout(() => { if (autosaveStatusEl.textContent === "Saved") autosaveStatusEl.textContent = ""; }, 2000);
+        }
+      })
+      .catch((err) => {
+        if (autosaveStatusEl) {
+          autosaveStatusEl.textContent = err.message || "Save failed";
+          autosaveStatusEl.className = "save-status err";
+        }
+      });
+  }
+
+  function wireAutosave(el, eventName) {
+    el.addEventListener(eventName || "input", scheduleSave);
+  }
+
+  // ---- Attendee flagging ----
+  document.querySelectorAll(".brief-attendee-card").forEach((card) => {
+    const attendedCheck = card.querySelector(".attended-check");
+    const priorityCheck = card.querySelector(".priority-check");
+    const hookInput = card.querySelector(".hook-input");
+    const updateFlag = () => {
+      card.classList.toggle("flagged", attendedCheck.checked && priorityCheck.checked);
+    };
+    attendedCheck.addEventListener("change", updateFlag);
+    priorityCheck.addEventListener("change", updateFlag);
+    [attendedCheck, priorityCheck].forEach((el) => wireAutosave(el, "change"));
+    wireAutosave(hookInput, "input");
+  });
+
+  ["theme-1", "theme-2", "theme-3"].forEach((id) => wireAutosave(document.getElementById(id), "input"));
 
   // ---- Generate ----
   generateBtn.addEventListener("click", () => {
@@ -90,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
         statusEl.textContent = `Generated ${data.sections.length} section(s). Edit anything below before exporting.`;
         statusEl.className = "save-status ok";
         exportActions.style.display = "flex";
+        scheduleSave(); // persist the freshly generated draft right away
       })
       .catch((err) => {
         statusEl.textContent = err.message;
@@ -113,6 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <input type="text" class="editable-field followup-reason" value="${escapeAttr(fa.reason)}">
         `;
         followupList.appendChild(row);
+        row.querySelectorAll("input").forEach((el) => wireAutosave(el, "input"));
       });
     } else {
       followupList.innerHTML = '<p class="summary-empty">No one was flagged for follow-up.</p>';
@@ -129,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <input type="text" class="editable-field material-url" placeholder="Source URL (optional)" value="${escapeAttr(m.url || "")}">
         `;
         materialList.appendChild(row);
+        row.querySelectorAll("input, textarea").forEach((el) => wireAutosave(el, "input"));
       });
     } else {
       materialList.innerHTML = '<p class="summary-empty">No KPMG Reference Library material was cited for this dinner’s attendees.</p>';
@@ -212,6 +297,10 @@ document.addEventListener("DOMContentLoaded", () => {
         el.addEventListener("input", grow);
         grow();
       });
+
+      card.querySelectorAll("textarea, input, select").forEach((el) => {
+        wireAutosave(el, el.tagName === "SELECT" ? "change" : "input");
+      });
     });
   }
 
@@ -229,6 +318,35 @@ document.addEventListener("DOMContentLoaded", () => {
       emailSubject: card.querySelector(".email-subject-input").value,
       emailBody: card.querySelector(".email-body-textarea").value,
     }));
+  }
+
+  // ---- Restore any previously saved draft ----
+  if (draft) {
+    document.querySelectorAll(".brief-attendee-card").forEach((card) => {
+      const sel = (draft.selections || {})[card.dataset.attendeeId];
+      if (!sel) return;
+      const attendedCheck = card.querySelector(".attended-check");
+      const priorityCheck = card.querySelector(".priority-check");
+      attendedCheck.checked = !!sel.attended;
+      priorityCheck.checked = !!sel.priority;
+      card.querySelector(".hook-input").value = sel.hook || "";
+      card.classList.toggle("flagged", attendedCheck.checked && priorityCheck.checked);
+    });
+
+    if (draft.themes) {
+      ["theme-1", "theme-2", "theme-3"].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (draft.themes[i] !== undefined) el.value = draft.themes[i];
+      });
+    }
+
+    if (draft.sections && draft.sections.length) {
+      renderSummary(draft.followUpAreas, draft.relevantMaterial);
+      renderResults(draft.sections);
+      exportActions.style.display = "flex";
+      statusEl.textContent = "Restored your last saved draft.";
+      statusEl.className = "save-status ok";
+    }
   }
 
   // ---- Export to PDF ----
